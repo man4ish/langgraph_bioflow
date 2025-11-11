@@ -1,0 +1,15 @@
+pipeline_engine: "wdl"
+
+qc_thresholds:
+  mean_q30: 0.9
+  dup_rate: 0.15
+  align_rate: 0.85
+
+paths:
+  cromwell_jar: "/usr/local/bin/cromwell.jar"   # Path to Cromwell JAR
+  wdl_files:
+    alignment: "./workflows/alignment.wdl"
+    imputation: "./workflows/imputation.wdl"
+    gwas: "./workflows/gwas.wdl"
+  docker_image: "biocontainers/bwa:v0.7.17_cv1"  # Example image
+  output_dir: "./data/output"
