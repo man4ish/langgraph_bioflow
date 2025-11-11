@@ -1,56 +1,64 @@
-from typing import TypedDict
-import yaml
 from langgraph.graph import StateGraph, END
-from nodes.nextflow_runner import nextflow_runner
+from pydantic import BaseModel
+import random
+import os
+import subprocess
 
-# --- Define state schema ---
-class BioFlowState(TypedDict, total=False):
-    config: dict
-    input: str
-    qc_pass: bool
-    wdl_output: str
-    run_status: str
+# --- Define State Schema ---
+class WorkflowState(BaseModel):
+    attempt: int = 1
+    decision: str = "UNKNOWN"
 
+# --- Define Nodes ---
+def nextflow_run(state: WorkflowState):
+    attempt = state.attempt
+    print(f"Running Nextflow workflow (attempt {attempt})...\n")
+    subprocess.run(["nextflow", "run", "workflows/qc_pipeline.nf"], check=True)
+    # simulate reading QC summary
+    qc_summary = os.path.join("work", "latest", "qc_summary.txt")
+    # Simulate: randomly FAIL or PASS
+    decision = "PASS" if random.random() > 0.7 else "FAIL"
+    print(f"QC Decision: {decision}")
+    return {"decision": decision, "attempt": attempt}
 
-def load_config(path: str = "config/workflow_config.yaml") -> dict:
-    with open(path, "r") as f:
-        return yaml.safe_load(f)
+def qc_decision(state: WorkflowState):
+    decision = state.decision
+    attempt = state.attempt
+    if decision == "PASS":
+        print("QC passed. Proceeding to END.")
+        return {"decision": "PASS", "attempt": attempt}
+    else:
+        print(f"QC failed on attempt {attempt}. Re-running with adjusted parameters (next: {attempt + 1}).")
+        return {"decision": "FAIL", "attempt": attempt}
 
+def qc_condition(state: WorkflowState):
+    if state.decision == "PASS":
+        return "done"
+    elif state.attempt > 3:  # stop runaway loops
+        print("Reached max attempts (3). Stopping workflow.")
+        return "done"
+    else:
+        state.attempt += 1
+        return "rerun"
 
-def start_node(state: BioFlowState):
-    config = state["config"]
-    print("Starting BioFlow test...")
+# --- Build Graph ---
+graph = StateGraph(WorkflowState)
+graph.add_node("nextflow_run", nextflow_run)
+graph.add_node("qc_decision", qc_decision)
 
-    first_input = config["input_files"][0]
-    state["input"] = first_input
-    print(f"Loaded input file: {first_input}")
-    return state
+graph.add_edge("__start__", "nextflow_run")
+graph.add_edge("nextflow_run", "qc_decision")
 
+graph.add_conditional_edges(
+    "qc_decision",
+    qc_condition,
+    {"rerun": "nextflow_run", "done": END},
+)
 
-def qc_node(state: BioFlowState):
-    thresholds = state["config"]["qc_thresholds"]
-    print(f"Running QC on {state['input']}")
-    print(f"QC thresholds: {thresholds}")
+app = graph.compile()
 
-    # Dummy pass for now
-    state["qc_pass"] = True
-    return state
-
-
-# --- Build graph ---
-graph = StateGraph(BioFlowState)
-graph.add_node("start", start_node)
-graph.add_node("qc", qc_node)
-graph.add_node("wdl_runner", wdl_runner)
-
-graph.add_edge("start", "qc")
-graph.add_edge("qc", "wdl_runner")
-graph.add_edge("wdl_runner", END)
-graph.set_entry_point("start")
-
-
-# --- Compile & run ---
+# --- Run ---
 if __name__ == "__main__":
-    config = load_config()
-    app = graph.compile()
-    app.invoke({"config": config})
+    state = WorkflowState()
+    final_state = app.invoke(state)
+    print("Final State:", final_state)

@@ -1,80 +1,82 @@
+# LangGraph BioFlow
 
-# LangGraph BioFlow  
-**AI-Orchestrated Bioinformatics Workflow Supervisor**
+**AI-Orchestrated Bioinformatics Workflow Supervisor (Nextflow Edition)**
 
 ---
 
 ## Overview
-**LangGraph BioFlow** is an experimental project that integrates **LangGraph** with **WDL (Workflow Description Language)** and **Docker** to build an intelligent, adaptive workflow supervisor for bioinformatics pipelines.
 
-The system uses **LLM-driven decision nodes** to interpret QC metrics, control downstream analysis steps (alignment → QC → imputation → GWAS), and adaptively rerun or skip tasks based on real-time results.
+**LangGraph BioFlow** is an experimental framework that integrates **LangGraph** with **Nextflow** to create an intelligent, adaptive workflow supervisor for bioinformatics pipelines.
 
-It aims to evolve into a **smart AI supervisor** capable of:
-- Monitoring computational pipelines
-- Evaluating data quality automatically
-- Making dynamic rerun decisions
-- Generating interpretive analysis summaries
+The system leverages **AI-driven decision nodes** to interpret QC metrics, control pipeline reruns, and manage downstream analyses such as alignment, QC, imputation, and GWAS.
+
+The goal is to evolve into a **smart AI supervisor** that can:
+
+* Monitor and control computational pipelines
+* Evaluate data quality automatically
+* Make dynamic rerun or stop decisions
+* Generate interpretable summaries for researchers
 
 ---
 
 ## Current Features
-- Modular node-based workflow using **LangGraph**
-- Execution of **WDL pipelines** via Cromwell + Docker
-- Configurable QC thresholds (mean Q30, duplication rate, alignment rate)
-- Mock nodes for each analysis stage:
-  - Input registration  
-  - Alignment (via WDL)  
-  - QC metrics evaluation  
-  - Decision logic (rerun / continue)  
-  - Imputation, GWAS, and reporting  
+
+* Node-based orchestration using **LangGraph**
+* Workflow execution via **Nextflow**
+* QC-based decision logic with automatic retries
+* Configurable recursion/attempt limits to prevent runaway loops
+* Modular structure for replacing mock nodes with real bioinformatics stages
 
 ---
 
 ## Architecture
+
 ```
-Input → Alignment → QC → Decision → Imputation → GWAS → Report
+Input → Alignment → QC → Decision → (Re-run if FAIL) → End
 ```
 
-Each stage is represented by a **LangGraph node**, which can run a **WDL task** inside Docker.  
-The **Decision Node** interprets QC metrics (either rule-based or via an LLM) and conditionally controls downstream flow.
+Each stage is represented by a **LangGraph node**, which can trigger a **Nextflow process** or another pipeline component.
+The **Decision Node** interprets QC results from `qc_summary.txt` and adaptively decides whether to re-run or proceed.
+
+---
+
+## Example Workflow
+
+A minimal demonstration of an adaptive QC workflow:
+
+```
+main.py → runs Nextflow pipeline (qc_pipeline.nf)
+             ↓
+          QC summary → PASS → END
+                       FAIL → re-run (up to 3 attempts)
+```
 
 ---
 
 ## Project Goals
-- Integrate **Cromwell** for executing WDL pipelines inside Docker.
-- Introduce **persistent state** and workflow monitoring.
-- Replace rule-based QC decisions with **LLM evaluation** of metrics.
-- Expand to full bioinformatics pipelines: alignment → QC → variant calling → GWAS → report generation.
-- Enable human-in-the-loop approval for uncertain cases.
+
+* Extend to full bioinformatics pipeline (alignment → QC → GWAS → reporting)
+* Replace rule-based QC decisions with **LLM evaluation** of QC metrics
+* Integrate **LangGraph memory/state tracking** for pipeline monitoring
+* Add **Nextflow event hooks** for real-time workflow introspection
+* Build a **FastAPI dashboard** for live visualization of LangGraph state
 
 ---
 
 ## Project Structure
+
 ```
 langgraph_bioflow/
-├── main.py
+├── main.py                   # LangGraph controller integrating Nextflow
+├── workflows/
+│   └── qc_pipeline.nf        # Example Nextflow pipeline
 ├── requirements.txt
-├── README.md
 ├── config/
-│   ├── workflow_config.yaml
-│   └── model_config.yaml
-├── nodes/
-│   ├── input_manager.py
-│   ├── aligner_node.py
-│   ├── qc_node.py
-│   ├── decision_node.py
-│   ├── imputation_node.py
-│   ├── gwas_node.py
-│   ├── report_node.py
-│   └── error_handler.py
+│   └── settings.yaml         # (Optional future config)
 ├── utils/
-│   ├── wdl_runner.py
 │   ├── logger.py
-│   └── shell_runner.py
-└── data/
-    ├── input/
-    ├── output/
-    └── temp/
+│   └── helpers.py
+└── README.md
 ```
 
 ---
@@ -82,60 +84,48 @@ langgraph_bioflow/
 ## Quick Start
 
 ### 1. Clone and Install
+
 ```bash
 git clone https://github.com/yourusername/langgraph_bioflow.git
 cd langgraph_bioflow
 pip install -r requirements.txt
 ```
 
-### 2. Set Up Cromwell
-Download and place Cromwell:
+### 2. Install Nextflow
+
 ```bash
-wget https://github.com/broadinstitute/cromwell/releases/download/85/cromwell-85.jar -O /usr/local/bin/cromwell.jar
-chmod +x /usr/local/bin/cromwell.jar
+curl -s https://get.nextflow.io | bash
+sudo mv nextflow /usr/local/bin/
+nextflow -version
 ```
 
-Verify:
-```bash
-java -jar /usr/local/bin/cromwell.jar --version
-```
+### 3. Run the Demo
 
-### 3. Test Docker
-Ensure Docker works:
-```bash
-docker run hello-world
-```
-
-### 4. Run the Demo
 ```bash
 python main.py
 ```
 
 Expected output (for mock workflow):
+
 ```
-[InputManager] Starting new dataset workflow...
-[AlignerNode] Launching WDL alignment workflow...
-[QCNode] Collecting quality metrics...
-[DecisionNode] Decision: continue
-[ImputationNode] Running imputation WDL...
-[GWASNode] Performing association analysis...
-[ReportNode] Generating summary report...
-Final Result: {'status': 'complete'}
+Running Nextflow workflow (attempt 1)...
+✅ QC summary generated: work/.../qc_summary.txt
+QC Decision: FAIL
+QC failed on attempt 1. Re-running with adjusted parameters (next: 2).
+...
+QC Decision: PASS
+QC passed. Proceeding to END.
+Final State: {'attempt': 2, 'decision': 'PASS'}
 ```
 
 ---
 
 ## Future Enhancements
-- [ ] Integrate **FastQC parser** for real metrics  
-- [ ] Add **LLM-driven decision node** for adaptive QC reasoning  
-- [ ] Store state and results in **SQLite or MongoDB**  
-- [ ] Add **LangSmith tracing** for visualization  
-- [ ] Create **FastAPI dashboard** for human review and workflow monitoring  
 
+* [ ] Integrate **real QC metric parsers** (FastQC, MultiQC)
+* [ ] Add **LLM reasoning** for QC interpretation
+* [ ] Introduce **Nextflow monitoring hooks** via API
+* [ ] Use **SQLite** for persistent LangGraph state
+* [ ] Support **parallel task orchestration**
+* [ ] Build **FastAPI or Streamlit dashboard** for live pipeline visualization
 
----
-
-## Maintainer
-**Manish Kumar**  
-Sr. Bioinformatics Software Engineer & Data Scientist  
-````
