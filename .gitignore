@@ -1,0 +1,16 @@
+__pycache__/
+*.log
+data/input/
+data/output/
+data/temp/
+.env
+*.json
+*.zip
+*.tar.gz
+*.bam
+*.vcf
+obsolete
+results
+samples
+.nextflow*
+work/
