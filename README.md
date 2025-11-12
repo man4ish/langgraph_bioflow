@@ -6,76 +6,105 @@
 
 ## Overview
 
-**LangGraph BioFlow** is an experimental framework that integrates **LangGraph** with **Nextflow** to create an intelligent, adaptive workflow supervisor for bioinformatics pipelines.
+**LangGraph BioFlow** is an experimental orchestration framework that integrates **LangGraph** with **Nextflow** to build an **intelligent, adaptive bioinformatics workflow manager**.
 
-The system leverages **AI-driven decision nodes** to interpret QC metrics, control pipeline reruns, and manage downstream analyses such as alignment, QC, imputation, and GWAS.
+It introduces **AI-assisted decision-making** into traditional bioinformatics pipelines — dynamically deciding whether to proceed, rerun, or halt based on QC outcomes.
 
-The goal is to evolve into a **smart AI supervisor** that can:
+The goal is to evolve into a **smart pipeline supervisor** capable of:
 
-* Monitor and control computational pipelines
-* Evaluate data quality automatically
-* Make dynamic rerun or stop decisions
-* Generate interpretable summaries for researchers
+* Monitoring and controlling multi-stage computational pipelines
+* Evaluating data quality in real time
+* Making dynamic rerun or stop decisions based on QC metrics
+* Generating concise, interpretable summaries for researchers
 
 ---
 
-## Current Features
+## Current Capabilities
 
-* Node-based orchestration using **LangGraph**
-* Workflow execution via **Nextflow**
-* QC-based decision logic with automatic retries
-* Configurable recursion/attempt limits to prevent runaway loops
-* Modular structure for replacing mock nodes with real bioinformatics stages
+✅ **Sequential execution**: FastQC → Alignment → Deduplication → Variant Calling
+✅ **LangGraph-based control flow** with retry limits and state memory
+✅ **QC-driven branching** — automatically re-runs QC if metrics fail thresholds
+✅ **Nextflow integration** for modular process execution
+✅ **Scalable design** — can extend to RNA-seq, GWAS, or WGS workflows
 
 ---
 
 ## Architecture
 
 ```
-Input → Alignment → QC → Decision → (Re-run if FAIL) → End
+Raw Reads
+   ↓
+FASTQC → QC Decision (LangGraph)
+   ├── PASS → Exome Pipeline (SAMTOOLS_SORT → PICARD_MARKDUP → GATK_HAPLOTYPECALLER)
+   └── FAIL → Re-run QC (max 3 attempts)
 ```
 
-Each stage is represented by a **LangGraph node**, which can trigger a **Nextflow process** or another pipeline component.
-The **Decision Node** interprets QC results from `qc_summary.txt` and adaptively decides whether to re-run or proceed.
+Each stage is represented as a **LangGraph node**, which calls a corresponding **Nextflow workflow**.
+The **QC Decision Node** analyzes the results of `qc_pipeline.nf` and decides the next action.
 
 ---
 
-## Example Workflow
-
-A minimal demonstration of an adaptive QC workflow:
+## Example Workflow Execution
 
 ```
-main.py → runs Nextflow pipeline (qc_pipeline.nf)
-             ↓
-          QC summary → PASS → END
-                       FAIL → re-run (up to 3 attempts)
+main.py
+│
+├── Runs qc_pipeline.nf (FastQC)
+│      ├── PASS → proceeds to exome_pipeline.nf
+│      └── FAIL → retries QC (up to 3 times)
+│
+└── exome_pipeline.nf → SAMTOOLS_SORT → PICARD_MARKDUP → GATK_HAPLOTYPECALLER
+```
+
+Example output:
+
+```
+=== Running QC (attempt 1) ===
+QC Decision: FAIL
+QC failed on attempt 1. Retrying with adjusted parameters...
+
+=== Running QC (attempt 2) ===
+QC Decision: PASS
+Proceeding to exome pipeline.
+
+=== Running Exome Pipeline ===
+VCF generated: results/gatk/sample.vcf
+
+Final Workflow State:
+decision='COMPLETE' step='exome' attempt=2
 ```
 
 ---
 
 ## Project Goals
 
-* Extend to full bioinformatics pipeline (alignment → QC → GWAS → reporting)
-* Replace rule-based QC decisions with **LLM evaluation** of QC metrics
-* Integrate **LangGraph memory/state tracking** for pipeline monitoring
-* Add **Nextflow event hooks** for real-time workflow introspection
-* Build a **FastAPI dashboard** for live visualization of LangGraph state
+* Extend to end-to-end workflows (Alignment → QC → Imputation → GWAS → Reporting)
+* Replace rule-based QC thresholds with **LLM-driven evaluation**
+* Integrate **LangGraph memory and persistence** for auditability
+* Add **Nextflow monitoring hooks** for runtime introspection
+* Develop a **FastAPI/Streamlit dashboard** for live graph visualization
 
 ---
 
-## Project Structure
+## Directory Layout
 
 ```
 langgraph_bioflow/
-├── main.py                   # LangGraph controller integrating Nextflow
+├── main.py                     # LangGraph controller orchestrating Nextflow workflows
 ├── workflows/
-│   └── qc_pipeline.nf        # Example Nextflow pipeline
-├── requirements.txt
-├── config/
-│   └── settings.yaml         # (Optional future config)
+│   ├── qc_pipeline.nf          # Runs FastQC only
+│   └── exome_pipeline.nf       # Runs sort → markdup → variant calling
+├── modules/
+│   ├── fastqc/main.nf
+│   ├── samtools/main.nf
+│   ├── picard/main.nf
+│   └── gatk/main.nf
 ├── utils/
 │   ├── logger.py
 │   └── helpers.py
+├── config/
+│   └── settings.yaml
+├── requirements.txt
 └── README.md
 ```
 
@@ -83,7 +112,7 @@ langgraph_bioflow/
 
 ## Quick Start
 
-### 1. Clone and Install
+### 1. Clone and Install Dependencies
 
 ```bash
 git clone https://github.com/yourusername/langgraph_bioflow.git
@@ -99,33 +128,19 @@ sudo mv nextflow /usr/local/bin/
 nextflow -version
 ```
 
-### 3. Run the Demo
+### 3. Run the Orchestrated Workflow
 
 ```bash
 python main.py
-```
-
-Expected output (for mock workflow):
-
-```
-Running Nextflow workflow (attempt 1)...
-✅ QC summary generated: work/.../qc_summary.txt
-QC Decision: FAIL
-QC failed on attempt 1. Re-running with adjusted parameters (next: 2).
-...
-QC Decision: PASS
-QC passed. Proceeding to END.
-Final State: {'attempt': 2, 'decision': 'PASS'}
 ```
 
 ---
 
 ## Future Enhancements
 
-* [ ] Integrate **real QC metric parsers** (FastQC, MultiQC)
-* [ ] Add **LLM reasoning** for QC interpretation
-* [ ] Introduce **Nextflow monitoring hooks** via API
-* [ ] Use **SQLite** for persistent LangGraph state
-* [ ] Support **parallel task orchestration**
-* [ ] Build **FastAPI or Streamlit dashboard** for live pipeline visualization
-
+* [ ] Parse **real FastQC results** instead of random PASS/FAIL simulation
+* [ ] Implement **LLM-driven QC reasoning** (LangGraph + GPT)
+* [ ] Introduce **Nextflow event hooks** for progress tracking
+* [ ] Store LangGraph state in **SQLite** for persistent runs
+* [ ] Add **FastAPI dashboard** for interactive graph visualization
+* [ ] Extend for **RNA-seq, metagenomics, and multi-omics pipelines**
