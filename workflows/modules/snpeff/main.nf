@@ -1,4 +1,4 @@
-process SNPEFF_ANNOTATION {
+process SNPEFF_ANNOTATE {
 
     tag "$sample_id"
     publishDir "${params.outdir}/snpeff", mode: 'copy'
