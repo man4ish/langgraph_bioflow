@@ -47,13 +47,53 @@ The **QC Decision Node** analyzes the results of `qc_pipeline.nf` and decides th
 ## Example Workflow Execution
 
 ```
-main.py
+project_root/
 │
-├── Runs qc_pipeline.nf (FastQC)
-│      ├── PASS → proceeds to exome_pipeline.nf
-│      └── FAIL → retries QC (up to 3 times)
+├── workflows/                      # Nextflow pipelines
+│   ├── qc_pipeline.nf
+│   ├── exome_pipeline.nf
+│   └── __init__.py
 │
-└── exome_pipeline.nf → SAMTOOLS_SORT → PICARD_MARKDUP → GATK_HAPLOTYPECALLER
+├── src/                            # Python scripts
+│   ├── __init__.py
+│   │
+│   ├── pipeline/                   # LangGraph workflow orchestration
+│   │   ├── langgraph_workflow.py   # Full workflow: QC → Exome → Pathway → RAG → GNN → Viz
+│   │   └── __init__.py
+│   │
+│   ├── data/                       # Data extraction / graph building / features
+│   │   ├── __init__.py
+│   │   ├── neo4j_extractor.py      # Extract nodes/edges from Neo4j KG
+│   │   ├── graph_builder.py        # Build PyTorch Geometric graphs
+│   │   └── feature_engineering.py  # Node/edge features
+│   │
+│   ├── analysis/                   # Domain-specific analysis
+│   │   ├── pathway_enrichment_gene_list.py
+│   │   └── __init__.py
+│   │
+│   ├── rag/                        # RAG + Neo4j KG scripts
+│   │   ├── rag_pipeline.py         # LLM + Neo4j structured data generation
+│   │   └── structured_drug_kg.py  # Knowledge graph builder
+│   │
+│   ├── gnn/                        # GNN prediction
+│   │   ├── gnn_predictor.py
+│   │   └── __init__.py
+│   │
+│   └── utils/                      # Utility functions (logging, config, etc.)
+│       ├── __init__.py
+│       └── helpers.py
+│
+├── out/                             # Output data, reports, visualization
+│   ├── bamfiles/
+│   ├── figures/
+│   └── tables/
+│
+├── logs/                            # Logs for workflow, GNN, RAG
+│
+├── requirements.txt                 # Python dependencies
+├── environment.yml                  # Conda environment (optional)
+└── README.md
+
 ```
 
 Example output:
