@@ -394,3 +394,23 @@ process apply_vqsr {
     """
 }
 
+process snpeff_annotation {
+    tag "snpeff_annotation"
+    container 'docker.io/library/exome:latest'
+    cpus 4
+    memory '8 GB'
+
+    input:
+    path vcf_file from apply_vqsr.out
+
+    output:
+    path "out/output.vqsr.ann.vcf"
+
+    script:
+    """
+    mkdir -p out
+    java -Xmx4g -jar /usr/snpEff/SnpEff.jar GRCh38.86 $vcf_file > out/output.vqsr.ann.vcf
+    """
+}
+
+
