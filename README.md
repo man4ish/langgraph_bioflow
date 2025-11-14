@@ -22,12 +22,19 @@ The goal is to evolve into a **smart pipeline supervisor** capable of:
 ## Current Capabilities
 
 ✅ Sequential execution: FastQC → Alignment/Dedup → Variant Calling (Exome/WGS/RNA-Seq)
+
 ✅ LangGraph-based control flow with retry limits and persistent state memory
+
 ✅ QC-driven branching — automatically retries QC (max 3 attempts)
+
 ✅ Pathway enrichment from SNPeff gene lists
+
 ✅ Retrieval-Augmented Generation (RAG) querying the Drug–Target–Cancer knowledge graph
+
 ✅ GNN predictor for drug ranking and scoring
+
 ✅ Visualization of pathways, networks, and predicted drugs
+
 ✅ Modular and scalable design — easily extendable to multi-omics workflows
 
 ---
@@ -184,5 +191,3 @@ python main.py
 * Add **interactive dashboard** (FastAPI/Streamlit) for workflow graph and predictions
 * Extend to RNA-Seq, metagenomics, and multi-omics pipelines
 * Integrate more advanced GNN architectures for novel drug prediction
-
-Do you want me to do that next?
