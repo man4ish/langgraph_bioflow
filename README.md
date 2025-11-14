@@ -47,6 +47,87 @@ The **QC Decision Node** analyzes the results of `qc_pipeline.nf` and decides th
 ## Example Workflow Execution
 
 ```
+                  ┌──────────────┐
+                  │  __start__   │
+                  └──────┬──────┘
+                         │
+                         ▼
+                  ┌──────────────┐
+                  │      QC      │
+                  └──────┬──────┘
+                         │
+                QC Decision (PASS / FAIL)
+                         │
+           ┌─────────────┴─────────────┐
+           ▼                           ▼
+       Retry QC                     Continue
+           │                           │
+           └──────────────┐            │
+                          ▼            │
+                   ┌──────────────┐    │
+                   │Exome Decision│    │
+                   │(choose pipeline)│
+                   └──────┬──────┘
+          ┌───────────────┼───────────────┐
+          ▼               ▼               ▼
+   ┌────────────┐   ┌────────────┐   ┌────────────┐
+   │   WGS      │   │  Exome     │   │  RNA-Seq   │
+   └──────┬─────┘   └──────┬─────┘   └──────┬─────┘
+          │                │                │
+          └──────┬─────────┴─────────┬──────┘
+                 ▼                   ▼
+        ┌───────────────────────────────┐
+        │   Pathway Enrichment / Genes  │
+        └─────────────┬─────────────────┘
+                      ▼
+               ┌─────────────┐
+               │     RAG     │
+               └─────┬───────┘
+                     ▼
+               ┌─────────────┐
+               │  GNN Predictor │
+               └─────┬───────┘
+                     ▼
+               ┌─────────────┐
+               │ Visualization│
+               └─────┬───────┘
+                     ▼
+                    END
+```
+
+Example output:
+
+```
+=== Running QC (attempt 1) ===
+QC Decision: FAIL
+QC failed on attempt 1. Retrying with adjusted parameters...
+
+=== Running QC (attempt 2) ===
+QC Decision: PASS
+Proceeding to exome pipeline.
+
+=== Running Exome Pipeline ===
+VCF generated: results/gatk/sample.vcf
+
+Final Workflow State:
+decision='COMPLETE' step='exome' attempt=2
+```
+
+---
+
+## Project Goals
+
+* Extend to end-to-end workflows (Alignment → QC → Imputation → GWAS → Reporting)
+* Replace rule-based QC thresholds with **LLM-driven evaluation**
+* Integrate **LangGraph memory and persistence** for auditability
+* Add **Nextflow monitoring hooks** for runtime introspection
+* Develop a **FastAPI/Streamlit dashboard** for live graph visualization
+
+---
+
+## Directory Layout
+
+```
 project_root/
 │
 ├── workflows/                      # Nextflow pipelines
@@ -92,59 +173,6 @@ project_root/
 │
 ├── requirements.txt                 # Python dependencies
 ├── environment.yml                  # Conda environment (optional)
-└── README.md
-
-```
-
-Example output:
-
-```
-=== Running QC (attempt 1) ===
-QC Decision: FAIL
-QC failed on attempt 1. Retrying with adjusted parameters...
-
-=== Running QC (attempt 2) ===
-QC Decision: PASS
-Proceeding to exome pipeline.
-
-=== Running Exome Pipeline ===
-VCF generated: results/gatk/sample.vcf
-
-Final Workflow State:
-decision='COMPLETE' step='exome' attempt=2
-```
-
----
-
-## Project Goals
-
-* Extend to end-to-end workflows (Alignment → QC → Imputation → GWAS → Reporting)
-* Replace rule-based QC thresholds with **LLM-driven evaluation**
-* Integrate **LangGraph memory and persistence** for auditability
-* Add **Nextflow monitoring hooks** for runtime introspection
-* Develop a **FastAPI/Streamlit dashboard** for live graph visualization
-
----
-
-## Directory Layout
-
-```
-langgraph_bioflow/
-├── main.py                     # LangGraph controller orchestrating Nextflow workflows
-├── workflows/
-│   ├── qc_pipeline.nf          # Runs FastQC only
-│   └── exome_pipeline.nf       # Runs sort → markdup → variant calling
-├── modules/
-│   ├── fastqc/main.nf
-│   ├── samtools/main.nf
-│   ├── picard/main.nf
-│   └── gatk/main.nf
-├── utils/
-│   ├── logger.py
-│   └── helpers.py
-├── config/
-│   └── settings.yaml
-├── requirements.txt
 └── README.md
 ```
 
