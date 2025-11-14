@@ -1,0 +1,67 @@
+# Dockerfile
+FROM ubuntu:22.04
+
+LABEL maintainer="Your Name"
+LABEL description="BWA + Samtools + Picard + GATK + SnpEff (ARM64 & AMD64)"
+
+# Set working directory for builds
+WORKDIR /tmp/build
+
+# Install dependencies (without gcc-multilib / g++-multilib)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget unzip bzip2 openjdk-11-jdk python3 python3-pip \
+    libncurses5-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev \
+    libssl-dev zlib1g-dev libgsl-dev build-essential gcc g++ make \
+    && rm -rf /var/lib/apt/lists/*
+
+# FastQC 0.12.1
+RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip \
+    && unzip fastqc_v0.12.1.zip \
+    && chmod +x FastQC/fastqc \
+    && mv FastQC /usr/local/fastqc \
+    && ln -s /usr/local/fastqc/fastqc /usr/local/bin/fastqc \
+    && rm fastqc_v0.12.1.zip    
+
+# NOTE: BWA 0.7.17 cannot be built on ARM64 (Apple Silicon)
+# biocontainers/bwa:v0.7.17-3-deb_cv1(use this as it is)
+# For BWA, use x86_64 container via buildx or run on an x86_64 system
+
+# Samtools 1.19
+RUN wget https://github.com/samtools/samtools/releases/download/1.19/samtools-1.19.tar.bz2 \
+    && tar xjf samtools-1.19.tar.bz2 \
+    && (cd samtools-1.19 && ./configure --prefix=/usr/local && make && make install) \
+    && rm -rf samtools-1.19*
+
+# Picard 2.27.5
+RUN wget https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.jar \
+    && mkdir -p /usr/picard \
+    && mv picard.jar /usr/picard/picard.jar \
+    && echo -e '#!/bin/bash\njava -jar /usr/picard/picard.jar "$@"' > /usr/local/bin/picard \
+    && chmod +x /usr/local/bin/picard
+
+# GATK 4.5.0.0
+RUN wget https://github.com/broadinstitute/gatk/releases/download/4.5.0.0/gatk-4.5.0.0.zip \
+    && unzip gatk-4.5.0.0.zip \
+    && mkdir -p /usr/gatk \
+    && mv gatk-4.5.0.0/gatk-package-4.5.0.0-local.jar /usr/gatk/gatk.jar \
+    && rm -rf gatk-4.5.0.0* \
+    && echo -e '#!/bin/bash\njava -jar /usr/gatk/gatk.jar "$@"' > /usr/local/bin/gatk \
+    && chmod +x /usr/local/bin/gatk
+
+# SnpEff latest
+RUN wget https://github.com/pcingola/SnpEff/archive/refs/tags/v5.1d.zip \
+    && unzip v5.1d.zip \
+    && mv SnpEff-5.1d /usr/snpEff \
+    && rm v5.1d.zip \
+    && echo -e '#!/bin/bash\njava -jar /usr/snpEff/SnpEff.jar "$@"' > /usr/local/bin/snpEff \
+    && chmod +x /usr/local/bin/snpEff
+
+# Test tools
+RUN bwa 2>&1 | head -n 1 \
+    && samtools --version | head -n 1 \
+    && picard -h | head -n 1 \
+    && gatk --help | head -n 1 \
+    && snpEff -h | head -n 1
+
+# Set working directory for user data
+WORKDIR /data
