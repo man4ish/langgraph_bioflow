@@ -8,33 +8,27 @@
 
 LangGraph BioFlow is an experimental orchestration framework that integrates **LangGraph**, **Nextflow**, and **AI/ML modules** to build an intelligent, adaptive bioinformatics workflow manager.
 
-It introduces **AI-assisted decision-making** into traditional bioinformatics pipelines — dynamically deciding which pipeline to run, whether to proceed, rerun, or halt based on QC outcomes, pathway enrichment, or predicted drug-target interactions.
+It introduces **AI-assisted decision-making** into bioinformatics pipelines — dynamically deciding which pipeline to run, whether to proceed, rerun, or halt based on QC outcomes, pathway enrichment, or predicted drug-target interactions.
 
 The goal is to evolve into a **smart pipeline supervisor** capable of:
 
 * Monitoring and controlling multi-stage computational pipelines
 * Evaluating data quality and gene/pathway significance in real time
 * Making dynamic rerun or stop decisions based on QC, enrichment, or prediction scores
-* Generating interpretable visual summaries and drug predictions
+* Generating interpretable visual summaries, drug predictions, and network outputs
 
 ---
 
 ## Current Capabilities
 
-✅ Sequential execution: FastQC → Alignment/Dedup → Variant Calling (Exome/WGS/RNA-Seq)
-
-✅ LangGraph-based control flow with retry limits and persistent state memory
-
-✅ QC-driven branching — automatically retries QC (max 3 attempts)
-
-✅ Pathway enrichment from SNPeff gene lists
-
-✅ Retrieval-Augmented Generation (RAG) querying the Drug–Target–Cancer knowledge graph
-
-✅ GNN predictor for drug ranking and scoring
-
-✅ Visualization of pathways, networks, and predicted drugs
-
+✅ Sequential execution: FastQC → Alignment/Dedup → Variant Calling (Exome/WGS/RNA-Seq)  
+✅ LangGraph-based control flow with retry limits and persistent state memory  
+✅ QC-driven branching — automatically retries QC (max 3 attempts)  
+✅ Pathway enrichment from SNPeff gene lists (`src/analysis/pathway_enrichment_gene_list.py`)  
+✅ Gene → Pathway network visualization (`src/analysis/gene_pathway_network_visualization_rag.py`)  
+✅ Retrieval-Augmented Generation (RAG) querying Drug–Target–Cancer knowledge graph (`src/rag`)  
+✅ GNN predictor for drug ranking and scoring (`src/gnn`)  
+✅ Visualization of pathways, networks, and predicted drugs  
 ✅ Modular and scalable design — easily extendable to multi-omics workflows
 
 ---
@@ -42,66 +36,31 @@ The goal is to evolve into a **smart pipeline supervisor** capable of:
 ## Architecture
 
 ```
+
 Raw Reads
-   ↓
+↓
 FASTQC → QC Decision (LangGraph)
-   ├── PASS → Choose Pipeline: WGS / Exome / RNA-Seq → Variant Calling
-   └── FAIL → Re-run QC (max 3 attempts)
-         ↓
-Pathway Enrichment → RAG → GNN Predictor → Visualization
+├── PASS → Choose Pipeline → Variant Calling → Pathway Enrichment
+│                                      ↓
+│                               Gene → Pathway Network
+│                                      ↓
+│                                    RAG → Neo4j KG
+│                                      ↓
+│                                GNN Predictor
+│                                      ↓
+│                                Visualization
+└── FAIL → Re-run QC (max 3 attempts)
+
 ```
 
 Each stage is represented as a **LangGraph node**, which calls either a Nextflow workflow or a Python module.
 
 ---
 
-### Example Workflow Execution
-
-```
-=== Running QC (attempt 1) ===
-QC Decision: FAIL
-QC failed on attempt 1. Retrying with adjusted parameters...
-
-=== Running QC (attempt 2) ===
-QC Decision: PASS
-Proceeding to Exome pipeline.
-
-=== Running Exome Pipeline ===
-VCF generated: results/gatk/sample.vcf
-
-=== Pathway Enrichment ===
-Gene list: ["TP53", "APP", "SNCA", "LRRK2"]
-
-=== RAG Pipeline ===
-Neo4j KG queried: 100 nodes, 150 edges
-
-=== GNN Predictor ===
-Drug Predictions: ["DrugA", "DrugB"], Scores: [0.95, 0.88]
-
-=== Visualization ===
-Figures saved to out/figures/
-
-Final Workflow State:
-decision='COMPLETE' step='exome' attempt=2
-```
-
----
-
-## Project Goals
-
-* Extend to end-to-end workflows (QC → Alignment → Variant Calling → Pathway → RAG → GNN → Reporting)
-* Replace rule-based QC thresholds with **LLM-driven evaluation**
-* Integrate **GNN predictor** for drug-target discovery
-* Store **LangGraph state** for auditability and reproducibility
-* Add **visualization** of pathway enrichment, network, and drug predictions
-* Build **FastAPI/Streamlit dashboard** for live workflow graph and prediction results
-* Support multi-omics pipelines: RNA-Seq, WGS, metagenomics
-
----
-
 ## Directory Layout
 
 ```
+
 project_root/
 │
 ├── workflows/                      # Nextflow pipelines
@@ -109,36 +68,38 @@ project_root/
 │   ├── exome_pipeline.nf
 │   ├── wgs_pipeline.nf
 │   ├── rnaseq_pipeline.nf
-│   └── __init__.py
+│   └── **init**.py
 │
 ├── src/                            # Python modules
-│   ├── __init__.py
+│   ├── **init**.py
 │   │
 │   ├── pipeline/                   # LangGraph workflow orchestration
-│   │   ├── langgraph_workflow.py   # Full workflow: QC → Pipeline → Pathway → RAG → GNN → Viz
-│   │   └── __init__.py
+│   │   ├── langgraph_workflow.py
+│   │   └── **init**.py
 │   │
 │   ├── data/                       # Data extraction / graph building / features
-│   │   ├── __init__.py
 │   │   ├── neo4j_extractor.py
 │   │   ├── graph_builder.py
 │   │   └── feature_engineering.py
 │   │
 │   ├── analysis/                   # Domain-specific analysis
 │   │   ├── pathway_enrichment_gene_list.py
-│   │   └── __init__.py
+│   │   ├── gene_pathway_network_visualization_rag.py
+│   │   └── **init**.py
 │   │
 │   ├── rag/                        # RAG + Neo4j KG scripts
-│   │   ├── rag_pipeline.py
-│   │   └── structured_drug_kg.py
+│   │   ├── rag_pipeline_langchain.py
+│   │   ├── structured_drug_kg.py
+│   │   └── **init**.py
 │   │
 │   ├── gnn/                        # GNN prediction
 │   │   ├── gnn_predictor.py
-│   │   └── __init__.py
+│   │   └── **init**.py
 │   │
 │   └── utils/                      # Utility functions (logging, config, etc.)
-│       ├── __init__.py
-│       └── helpers.py
+│       ├── helpers.py
+│       ├── loggers.py
+│       └── **init**.py
 │
 ├── out/                             # Output data, reports, visualization
 │   ├── bamfiles/
@@ -150,16 +111,62 @@ project_root/
 ├── requirements.txt                 # Python dependencies
 ├── environment.yml                  # Conda environment (optional)
 └── README.md
+
+````
+
+---
+
+## Example Usage
+
+### 1. Pathway Enrichment
+```bash
+python src/analysis/pathway_enrichment_gene_list.py
+````
+
+* Input: gene list from VCF/annotation
+* Output: enrichment JSON & top pathway plots
+
+### 2. Gene → Pathway Network
+
+```bash
+python src/analysis/gene_pathway_network_visualization_rag.py
+```
+
+* Input: enrichment JSON
+* Output: directed graph of genes → pathways
+
+### 3. RAG Pipeline
+
+```bash
+python -m src.rag.rag_pipeline_langchain --query "genes linked to Parkinson's disease" --structured
+```
+
+* Queries Neo4j knowledge graph
+* Output: structured JSON, optional KG population
+
+### 4. GNN Predictor
+
+```python
+from src.gnn.gnn_predictor import GNNPredictor
+from src.data.graph_builder import build_graph_from_json
+from src.data.feature_engineering import generate_node_features
+
+graph = build_graph_from_json("results/enrichment/enrichment_results.json")
+features = generate_node_features(graph)
+
+model = GNNPredictor(input_dim=features.shape[1], hidden_dim=64, output_dim=2)
+model.train(graph, features)
+predictions = model.predict(graph, features)
 ```
 
 ---
 
 ## Quick Start
 
-1. **Clone and Install Dependencies**
+1. **Clone repository and install dependencies**
 
 ```bash
-git clone https://github.com/yourusername/langgraph_bioflow.git
+git clone https://github.com/man4ish/langgraph_bioflow.git
 cd langgraph_bioflow
 pip install -r requirements.txt
 ```
@@ -172,22 +179,21 @@ sudo mv nextflow /usr/local/bin/
 nextflow -version
 ```
 
-3. **Run the Orchestrated Workflow**
+3. **Run the orchestrated workflow**
 
 ```bash
 python main.py
 ```
 
-> Note: Ensure Neo4j is running for RAG + GNN modules.
+> Ensure Neo4j is running for RAG + GNN modules.
 
 ---
 
 ## Future Enhancements
 
-* Parse real FastQC results instead of simulation
-* Implement **LLM-driven QC reasoning**
-* Introduce Nextflow event hooks for progress tracking
-* Store LangGraph state in **SQLite** for persistent runs
-* Add **interactive dashboard** (FastAPI/Streamlit) for workflow graph and predictions
-* Extend to RNA-Seq, metagenomics, and multi-omics pipelines
-* Integrate more advanced GNN architectures for novel drug prediction
+* Real FastQC parsing and LLM-driven QC evaluation
+* Interactive dashboards (FastAPI / Streamlit) for workflow visualization and prediction results
+* Multi-omics support: RNA-Seq, WGS, metagenomics
+* Advanced GNN architectures for novel drug prediction
+* Persistent LangGraph state storage for reproducibility
+
