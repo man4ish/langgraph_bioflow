@@ -1,32 +1,28 @@
 nextflow.enable.dsl=2
 
-// Include the BWA module
 include { BWA_ALIGN } from './modules/bwa/main.nf'
 
-workflow test_bwa {
+workflow {
 
-    // Input channel: paired-end reads
-    reads_ch = Channel.fromFilePairs('data/fastq/*_{R1,R2}_001.fastq.gz', flat: true)
+    log.info "📁 Using FASTQ input: ${params.reads}"
+    log.info "📁 Using reference genome: ${params.reference}"
 
-    // Reference genome
-    reference = file('data/reference/genome.fa')
+    // 1) Load read pairs
+    reads_ch = Channel.fromFilePairs(
+                    params.reads,
+                    flat: true)
 
-    log.info "🧬 Testing BWA alignment..."
-    log.info "📁 FASTQ input: data/fastq/*_{R1,R2}_001.fastq.gz"
-    log.info "📁 Reference genome: data/reference/genome.fa"
+    // 2) Wrap every input in a tuple explicitly
+    aligned_inputs = reads_ch.map { pair ->
+        def sample_id = pair[0]
+        def reads     = pair[1]
+        def ref       = file(params.reference)
 
-    // Prepare input as tuples of (sample_id, R1, R2, reference)
-    aligned_input = reads_ch.map { sample_id, reads ->
-        tuple(sample_id, reads[0], reads[1], reference)
+        return tuple(sample_id, reads, ref)
     }
 
-    // Run BWA
-    aligned_bams = BWA_ALIGN(aligned_input)
+    // 3) Run BWA
+    result = BWA_ALIGN(aligned_inputs)
 
-    // View output
-    aligned_bams.view { "✅ BWA alignment complete for: ${it[0]}" }
-}
-
-workflow {
-    test_bwa()
+    result.view()
 }
