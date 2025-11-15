@@ -1,0 +1,21 @@
+```
+gnn_predictor/                  # Main folder for GNN-based prediction and RAG integration
+├── __init__.py
+├── data/                       # Data extraction and preprocessing
+│   ├── __init__.py
+│   ├── neo4j_extractor.py      # Extract drug/target/cancer graph from Neo4j
+│   ├── graph_builder.py        # Build PyTorch Geometric graph objects
+│   └── feature_engineering.py  # Node/edge features: embeddings, properties
+├── models/                     # GNN model and predictor
+│   ├── __init__.py
+│   └── gnn_predictor.py        # Train/predict GNN on graph
+├── rag/                        # RAG query integration
+│   ├── __init__.py
+│   └── rag_support.py           # Query RAG pipeline using GNN output
+├── visualization/              # Network visualization
+│   ├── __init__.py
+│   └── visualization.py         # Visualize predicted networks
+└── utils/                      # Any utility scripts (optional)
+    ├── __init__.py
+    └── logger.py               # Logging helper (optional)
+```
