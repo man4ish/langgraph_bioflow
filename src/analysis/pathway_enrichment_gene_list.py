@@ -1,11 +1,10 @@
-# pathway_enrichment_gene_list.py
 """
 Module: Pathway Enrichment and Visualization from Gene List
 
 Author: Manish Kumar
 Date: 2025-11-14
-Description: Performs pathway enrichment analysis from a gene list
-             and visualizes top enriched pathways.
+Description: Performs pathway enrichment analysis from a gene list,
+             saves results as JSON, and visualizes top enriched pathways.
 """
 
 import pandas as pd
@@ -14,6 +13,7 @@ import seaborn as sns
 import os
 import gseapy as gp  # Python library for gene set enrichment
 import numpy as np
+import json
 
 class GeneListEnrichment:
     def __init__(self, gene_list, organism='Human', outdir='results/enrichment'):
@@ -28,21 +28,25 @@ class GeneListEnrichment:
         os.makedirs(outdir, exist_ok=True)
         self.enrich_res = None
     
-    def run_enrichment(self, database='Reactome_2022', min_size=5, max_size=5000, fdr_threshold=0.05):
+    def run_enrichment(self, database='Reactome_2022', fdr_threshold=0.05):
         """
-        Perform enrichment using gseapy.
+        Perform enrichment using gseapy.enrichr.
         database: pathway database (Reactome, KEGG, GO_Biological_Process)
+        fdr_threshold: adjusted p-value cutoff
         """
         print(f"Running enrichment on {len(self.gene_list)} genes using {database}")
         enr = gp.enrichr(
             gene_list=self.gene_list,
-            description='gene_list',
             gene_sets=database,
             organism=self.organism,
             outdir=self.outdir,
             cutoff=fdr_threshold
         )
         self.enrich_res = enr.results
+        # Save results as JSON for downstream use
+        json_file = os.path.join(self.outdir, "enrichment_results.json")
+        self.enrich_res.to_json(json_file, orient="records", indent=2)
+        print(f"Saved enrichment results to {json_file}")
         return self.enrich_res
     
     def top_pathways(self, n=10):
@@ -62,7 +66,9 @@ class GeneListEnrichment:
         sns.barplot(
             x=-np.log10(top_df['Adjusted P-value']),
             y=top_df['Term'],
-            palette='viridis'
+            palette='viridis',
+            hue=None,
+            dodge=False
         )
         plt.xlabel("-log10(Adjusted P-value)")
         plt.ylabel("Pathway")
@@ -91,8 +97,11 @@ class GeneListEnrichment:
 # Example usage
 # -------------------------
 if __name__ == "__main__":
-    # Example gene list (from SnpEff)
-    gene_list = ["TP53", "BRCA1", "BRCA2", "LRRK2", "SNCA", "APP"]
+    # Example gene list (≈100 genes for testing)
+    gene_list = [
+        "TP53","BRCA1","BRCA2","LRRK2","SNCA","APP","EGFR","VEGFA","PTEN","AKT1",
+        "MYC","CDK2","CDK4","RB1","BCL2","MAPK1","MAPK3","JUN","FOS","STAT3"
+    ]
     
     enrichment = GeneListEnrichment(gene_list)
     enrichment.run_enrichment(database='Reactome_2022')

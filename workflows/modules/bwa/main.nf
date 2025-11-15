@@ -6,13 +6,14 @@ process BWA_ALIGN {
     tuple val(sample_id), path(reads), path(reference)
 
     output:
-    tuple val(sample_id), path("*.sam")
+    tuple val(sample_id), path("${sample_id}.sam")
 
-    container 'biocontainers/bwa:v0.7.17_cv1'
+    // Remove container line
 
     script:
     """
-    bwa index ${reference}
     bwa mem -t 4 ${reference} ${reads[0]} ${reads[1]} > ${sample_id}.sam
     """
 }
+
+

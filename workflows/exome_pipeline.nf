@@ -2,10 +2,10 @@ nextflow.enable.dsl=2
 
 // Include modules
 include { BWA_ALIGN }              from './modules/bwa/main.nf'
-include { SAMTOOLS_SORT }          from './modules/samtools/main.nf'
-include { PICARD_MARKDUP }         from './modules/picard/main.nf'
-include { GATK_HAPLOTYPECALLER }   from './modules/gatk/main.nf'
-include { SNPEFF_ANNOTATE }        from './modules/snpeff/main.nf' // optional if annotation is next
+// include { SAMTOOLS_SORT }          from './modules/samtools/main.nf'
+// include { PICARD_MARKDUP }         from './modules/picard/main.nf'
+// include { GATK_HAPLOTYPECALLER }   from './modules/gatk/main.nf'
+// include { SNPEFF_ANNOTATE }        from './modules/snpeff/main.nf' // optional if annotation is next
 
 workflow exome_pipeline {
 
@@ -27,26 +27,26 @@ workflow exome_pipeline {
     /*
      * STEP 2: Sort BAM files using SAMTOOLS
      */
-    sorted_bams = SAMTOOLS_SORT(aligned_sams)
+    // sorted_bams = SAMTOOLS_SORT(aligned_sams)
 
     /*
      * STEP 3: Mark duplicates using PICARD
      */
-    dedup_bams = PICARD_MARKDUP(sorted_bams)
+    // dedup_bams = PICARD_MARKDUP(sorted_bams)
 
     /*
      * STEP 4: Variant calling with GATK HaplotypeCaller
      * ❗ Only pass the dedup_bams channel, not the reference separately
      */
-    vcfs = GATK_HAPLOTYPECALLER(dedup_bams.map { sample_id, bam -> tuple(sample_id, bam, reference) })
+    // vcfs = GATK_HAPLOTYPECALLER(dedup_bams.map { sample_id, bam -> tuple(sample_id, bam, reference) })
 
 
     /*
      * (Optional) STEP 5: Annotation with SnpEff
      */
-    annotated_vcfs = SNPEFF_ANNOTATE(vcfs)
+    // annotated_vcfs = SNPEFF_ANNOTATE(vcfs)
 
-    annotated_vcfs.view { vcf -> "✅ Annotated VCF generated: ${vcf}" }
+    // annotated_vcfs.view { vcf -> "✅ Annotated VCF generated: ${vcf}" }
 }
 
 workflow {
