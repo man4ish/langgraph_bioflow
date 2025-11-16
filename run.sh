@@ -1,0 +1,1 @@
+nextflow run workflows/qc_pipeline.nf -entry qc_pipeline -resume

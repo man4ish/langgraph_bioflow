@@ -1,126 +1,187 @@
 # LangGraph BioFlow
 
-**AI-Orchestrated Bioinformatics Workflow Supervisor (Nextflow Edition)**
+**AI-Orchestrated Bioinformatics Workflow Supervisor (Nextflow + RAG + GNN Edition)**
 
 ---
 
 ## Overview
 
-**LangGraph BioFlow** is an experimental orchestration framework that integrates **LangGraph** with **Nextflow** to build an **intelligent, adaptive bioinformatics workflow manager**.
+LangGraph BioFlow is an experimental orchestration framework that integrates **LangGraph**, **Nextflow**, and **AI/ML modules** to build an intelligent, adaptive bioinformatics workflow manager.
 
-It introduces **AI-assisted decision-making** into traditional bioinformatics pipelines — dynamically deciding whether to proceed, rerun, or halt based on QC outcomes.
+It introduces **AI-assisted decision-making** into bioinformatics pipelines — dynamically deciding which pipeline to run, whether to proceed, rerun, or halt based on QC outcomes, pathway enrichment, or predicted drug-target interactions.
 
 The goal is to evolve into a **smart pipeline supervisor** capable of:
 
 * Monitoring and controlling multi-stage computational pipelines
-* Evaluating data quality in real time
-* Making dynamic rerun or stop decisions based on QC metrics
-* Generating concise, interpretable summaries for researchers
+* Evaluating data quality and gene/pathway significance in real time
+* Making dynamic rerun or stop decisions based on QC, enrichment, or prediction scores
+* Generating interpretable visual summaries, drug predictions, and network outputs
 
 ---
 
 ## Current Capabilities
 
-✅ **Sequential execution**: FastQC → Alignment → Deduplication → Variant Calling
-✅ **LangGraph-based control flow** with retry limits and state memory
-✅ **QC-driven branching** — automatically re-runs QC if metrics fail thresholds
-✅ **Nextflow integration** for modular process execution
-✅ **Scalable design** — can extend to RNA-seq, GWAS, or WGS workflows
+✅ Sequential execution: FastQC → Alignment/Dedup → Variant Calling (Exome/WGS/RNA-Seq)  
+✅ LangGraph-based control flow with retry limits and persistent state memory  
+✅ QC-driven branching — automatically retries QC (max 3 attempts)  
+✅ Pathway enrichment from SNPeff gene lists (`src/analysis/pathway_enrichment_gene_list.py`)  
+✅ Gene → Pathway network visualization (`src/analysis/gene_pathway_network_visualization_rag.py`)  
+✅ Retrieval-Augmented Generation (RAG) querying Drug–Target–Cancer knowledge graph (`src/rag`)  
+✅ GNN predictor for drug ranking and scoring (`src/gnn`)  
+✅ Visualization of pathways, networks, and predicted drugs  
+✅ Modular and scalable design — easily extendable to multi-omics workflows
 
 ---
 
 ## Architecture
 
 ```
+
 Raw Reads
-   ↓
+↓
 FASTQC → QC Decision (LangGraph)
-   ├── PASS → Exome Pipeline (SAMTOOLS_SORT → PICARD_MARKDUP → GATK_HAPLOTYPECALLER)
-   └── FAIL → Re-run QC (max 3 attempts)
-```
-
-Each stage is represented as a **LangGraph node**, which calls a corresponding **Nextflow workflow**.
-The **QC Decision Node** analyzes the results of `qc_pipeline.nf` and decides the next action.
-
----
-
-## Example Workflow Execution
-
-```
-main.py
-│
-├── Runs qc_pipeline.nf (FastQC)
-│      ├── PASS → proceeds to exome_pipeline.nf
-│      └── FAIL → retries QC (up to 3 times)
-│
-└── exome_pipeline.nf → SAMTOOLS_SORT → PICARD_MARKDUP → GATK_HAPLOTYPECALLER
-```
-
-Example output:
+├── PASS → Choose Pipeline → Variant Calling → Pathway Enrichment
+│                                      ↓
+│                               Gene → Pathway Network
+│                                      ↓
+│                                    RAG → Neo4j KG
+│                                      ↓
+│                                GNN Predictor
+│                                      ↓
+│                                Visualization
+└── FAIL → Re-run QC (max 3 attempts)
 
 ```
-=== Running QC (attempt 1) ===
-QC Decision: FAIL
-QC failed on attempt 1. Retrying with adjusted parameters...
 
-=== Running QC (attempt 2) ===
-QC Decision: PASS
-Proceeding to exome pipeline.
-
-=== Running Exome Pipeline ===
-VCF generated: results/gatk/sample.vcf
-
-Final Workflow State:
-decision='COMPLETE' step='exome' attempt=2
-```
-
----
-
-## Project Goals
-
-* Extend to end-to-end workflows (Alignment → QC → Imputation → GWAS → Reporting)
-* Replace rule-based QC thresholds with **LLM-driven evaluation**
-* Integrate **LangGraph memory and persistence** for auditability
-* Add **Nextflow monitoring hooks** for runtime introspection
-* Develop a **FastAPI/Streamlit dashboard** for live graph visualization
+Each stage is represented as a **LangGraph node**, which calls either a Nextflow workflow or a Python module.
 
 ---
 
 ## Directory Layout
 
 ```
-langgraph_bioflow/
-├── main.py                     # LangGraph controller orchestrating Nextflow workflows
-├── workflows/
-│   ├── qc_pipeline.nf          # Runs FastQC only
-│   └── exome_pipeline.nf       # Runs sort → markdup → variant calling
-├── modules/
-│   ├── fastqc/main.nf
-│   ├── samtools/main.nf
-│   ├── picard/main.nf
-│   └── gatk/main.nf
-├── utils/
-│   ├── logger.py
-│   └── helpers.py
-├── config/
-│   └── settings.yaml
-├── requirements.txt
+project_root/
+│
+├── workflows/                      
+│   ├── qc_pipeline.nf
+│   ├── exome_pipeline.nf
+│   ├── wgs_pipeline.nf
+│   ├── rnaseq_pipeline.nf
+│   └── __init__.py
+│
+├── src/                            
+│   ├── __init__.py
+│   │
+│   ├── pipeline/                   
+│   │   ├── langgraph_workflow.py
+│   │   └── __init__.py
+│   │
+│   ├── data/                       
+│   │   ├── neo4j_extractor.py
+│   │   ├── graph_builder.py
+│   │   └── feature_engineering.py
+│   │
+│   ├── analysis/                   
+│   │   ├── pathway_enrichment_gene_list.py
+│   │   ├── gene_pathway_network_visualization_rag.py
+│   │   └── __init__.py
+│   │
+│   ├── rag/                        
+│   │   ├── rag_pipeline_langchain.py
+│   │   ├── structured_drug_kg.py
+│   │   └── __init__.py
+│   │
+│   ├── gnn_predictor/               
+│   │   ├── models/
+│   │   │   ├── gnn_predictor.py
+│   │   │   └── __init__.py
+│   │   ├── utils/
+│   │   │   ├── loggers.py
+│   │   │   └── __init__.py
+│   │   ├── visualization/
+│   │   │   ├── visualization.py
+│   │   │   └── __init__.py
+│   │   └── data/
+│   │       ├── feature_engineering.py
+│   │       ├── graph_builder.py
+│   │       ├── neo4j_extractor.py
+│   │       └── __init__.py
+│   │
+│   └── utils/                      
+│       ├── helpers.py
+│       ├── loggers.py
+│       └── __init__.py
+│
+├── out/                             
+│   ├── bamfiles/
+│   ├── figures/
+│   └── tables/
+│
+├── logs/                            
+├── requirements.txt                 
+├── environment.yml                  
 └── README.md
+
+````
+
+---
+
+## Example Usage
+
+### 1. Pathway Enrichment
+```bash
+python src/analysis/pathway_enrichment_gene_list.py
+````
+
+* Input: gene list from VCF/annotation
+* Output: enrichment JSON & top pathway plots
+
+### 2. Gene → Pathway Network
+
+```bash
+python src/analysis/gene_pathway_network_visualization_rag.py
+```
+
+* Input: enrichment JSON
+* Output: directed graph of genes → pathways
+
+### 3. RAG Pipeline
+
+```bash
+python -m src.rag.rag_pipeline_langchain --query "genes linked to Parkinson's disease" --structured
+```
+
+* Queries Neo4j knowledge graph
+* Output: structured JSON, optional KG population
+
+### 4. GNN Predictor
+
+```python
+from src.gnn.gnn_predictor import GNNPredictor
+from src.data.graph_builder import build_graph_from_json
+from src.data.feature_engineering import generate_node_features
+
+graph = build_graph_from_json("results/enrichment/enrichment_results.json")
+features = generate_node_features(graph)
+
+model = GNNPredictor(input_dim=features.shape[1], hidden_dim=64, output_dim=2)
+model.train(graph, features)
+predictions = model.predict(graph, features)
 ```
 
 ---
 
 ## Quick Start
 
-### 1. Clone and Install Dependencies
+1. **Clone repository and install dependencies**
 
 ```bash
-git clone https://github.com/yourusername/langgraph_bioflow.git
+git clone https://github.com/man4ish/langgraph_bioflow.git
 cd langgraph_bioflow
 pip install -r requirements.txt
 ```
 
-### 2. Install Nextflow
+2. **Install Nextflow**
 
 ```bash
 curl -s https://get.nextflow.io | bash
@@ -128,19 +189,21 @@ sudo mv nextflow /usr/local/bin/
 nextflow -version
 ```
 
-### 3. Run the Orchestrated Workflow
+3. **Run the orchestrated workflow**
 
 ```bash
 python main.py
 ```
 
+> Ensure Neo4j is running for RAG + GNN modules.
+
 ---
 
 ## Future Enhancements
 
-* [ ] Parse **real FastQC results** instead of random PASS/FAIL simulation
-* [ ] Implement **LLM-driven QC reasoning** (LangGraph + GPT)
-* [ ] Introduce **Nextflow event hooks** for progress tracking
-* [ ] Store LangGraph state in **SQLite** for persistent runs
-* [ ] Add **FastAPI dashboard** for interactive graph visualization
-* [ ] Extend for **RNA-seq, metagenomics, and multi-omics pipelines**
+* Real FastQC parsing and LLM-driven QC evaluation
+* Interactive dashboards (FastAPI / Streamlit) for workflow visualization and prediction results
+* Multi-omics support: RNA-Seq, WGS, metagenomics
+* Advanced GNN architectures for novel drug prediction
+* Persistent LangGraph state storage for reproducibility
+

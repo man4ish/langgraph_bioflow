@@ -1,8 +1,6 @@
 __pycache__/
 *.log
-data/input/
-data/output/
-data/temp/
+data/
 .env
 *.json
 *.zip
@@ -15,3 +13,7 @@ samples
 .nextflow*
 work/
 .venv
+input/
+nextflow
+miniconda.sh
+miniconda.sh
