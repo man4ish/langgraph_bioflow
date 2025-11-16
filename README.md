@@ -60,56 +60,66 @@ Each stage is represented as a **LangGraph node**, which calls either a Nextflow
 ## Directory Layout
 
 ```
-
 project_root/
 │
-├── workflows/                      # Nextflow pipelines
+├── workflows/                      
 │   ├── qc_pipeline.nf
 │   ├── exome_pipeline.nf
 │   ├── wgs_pipeline.nf
 │   ├── rnaseq_pipeline.nf
-│   └── **init**.py
+│   └── __init__.py
 │
-├── src/                            # Python modules
-│   ├── **init**.py
+├── src/                            
+│   ├── __init__.py
 │   │
-│   ├── pipeline/                   # LangGraph workflow orchestration
+│   ├── pipeline/                   
 │   │   ├── langgraph_workflow.py
-│   │   └── **init**.py
+│   │   └── __init__.py
 │   │
-│   ├── data/                       # Data extraction / graph building / features
+│   ├── data/                       
 │   │   ├── neo4j_extractor.py
 │   │   ├── graph_builder.py
 │   │   └── feature_engineering.py
 │   │
-│   ├── analysis/                   # Domain-specific analysis
+│   ├── analysis/                   
 │   │   ├── pathway_enrichment_gene_list.py
 │   │   ├── gene_pathway_network_visualization_rag.py
-│   │   └── **init**.py
+│   │   └── __init__.py
 │   │
-│   ├── rag/                        # RAG + Neo4j KG scripts
+│   ├── rag/                        
 │   │   ├── rag_pipeline_langchain.py
 │   │   ├── structured_drug_kg.py
-│   │   └── **init**.py
+│   │   └── __init__.py
 │   │
-│   ├── gnn/                        # GNN prediction
-│   │   ├── gnn_predictor.py
-│   │   └── **init**.py
+│   ├── gnn_predictor/               
+│   │   ├── models/
+│   │   │   ├── gnn_predictor.py
+│   │   │   └── __init__.py
+│   │   ├── utils/
+│   │   │   ├── loggers.py
+│   │   │   └── __init__.py
+│   │   ├── visualization/
+│   │   │   ├── visualization.py
+│   │   │   └── __init__.py
+│   │   └── data/
+│   │       ├── feature_engineering.py
+│   │       ├── graph_builder.py
+│   │       ├── neo4j_extractor.py
+│   │       └── __init__.py
 │   │
-│   └── utils/                      # Utility functions (logging, config, etc.)
+│   └── utils/                      
 │       ├── helpers.py
 │       ├── loggers.py
-│       └── **init**.py
+│       └── __init__.py
 │
-├── out/                             # Output data, reports, visualization
+├── out/                             
 │   ├── bamfiles/
 │   ├── figures/
 │   └── tables/
 │
-├── logs/                            # Logs for workflow, GNN, RAG
-│
-├── requirements.txt                 # Python dependencies
-├── environment.yml                  # Conda environment (optional)
+├── logs/                            
+├── requirements.txt                 
+├── environment.yml                  
 └── README.md
 
 ````
