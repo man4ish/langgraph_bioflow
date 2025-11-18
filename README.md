@@ -35,7 +35,7 @@ The goal is to evolve into a **smart pipeline supervisor** capable of:
 
 ## Architecture
 
-![Multi-omics Architecture Diagram](https://raw.githubusercontent.com/man4ish/langgraph_bioflow/main/multiomics_architecture_diagram.png)
+![Multi-omics Architecture Diagram](https://raw.githubusercontent.com/man4ish/langgraph_bioflow/main/multi-omics_architecture_diagram.png)
 
 
 ```
