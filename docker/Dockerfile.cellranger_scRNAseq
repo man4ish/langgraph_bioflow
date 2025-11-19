@@ -1,12 +1,18 @@
 # ============================================
 # Dockerfile: cellranger_scRNAseq
-# Purpose: Cell Ranger + Seurat + Pathway Enrichment
+# Purpose: Cell Ranger + R environment for Seurat and pathway enrichment
 # ============================================
 
 FROM ubuntu:22.04
 
 LABEL maintainer="Manish Kumar"
 LABEL description="Cell Ranger + R environment for Seurat and pathway enrichment"
+
+# -----------------------------
+# Set non-interactive mode (avoid tzdata prompts)
+# -----------------------------
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
 
 # -----------------------------
 # System dependencies
@@ -18,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2-dev libfontconfig1-dev libudunits2-dev \
     r-base r-base-dev \
     openjdk-11-jdk \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
@@ -27,13 +34,13 @@ RUN R -e "install.packages(c('Seurat','ggplot2','dplyr','patchwork','enrichplot'
 RUN R -e "if (!requireNamespace('BiocManager', quietly=TRUE)) install.packages('BiocManager'); BiocManager::install(c('clusterProfiler','org.Hs.eg.db'))"
 
 # -----------------------------
-# Install Cell Ranger
+# Install Cell Ranger 10.0.0
 # -----------------------------
-RUN wget -q https://cf.10xgenomics.com/releases/cell-exp/cellranger-7.1.0.tar.gz \
-    && tar -xzf cellranger-7.1.0.tar.gz \
-    && mv cellranger-7.1.0 /opt/cellranger \
-    && ln -s /opt/cellranger/cellranger /usr/local/bin/cellranger \
-    && rm cellranger-7.1.0.tar.gz
+    COPY cellranger-10.0.0.tar.xz /tmp/
+    RUN tar -xf /tmp/cellranger-10.0.0.tar.xz -C /opt/ \
+        && mv /opt/cellranger-10.0.0 /opt/cellranger \
+        && ln -s /opt/cellranger/cellranger /usr/local/bin/cellranger \
+        && rm /tmp/cellranger-10.0.0.tar.xz    
 
 # -----------------------------
 # Copy pathway enrichment script
@@ -42,7 +49,7 @@ COPY pathway_analysis.R /opt/scripts/pathway_analysis.R
 RUN chmod +x /opt/scripts/pathway_analysis.R
 
 # -----------------------------
-# Set working directory for data
+# Set working directory for user data
 # -----------------------------
 WORKDIR /data
 
