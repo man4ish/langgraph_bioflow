@@ -16,4 +16,4 @@ work/
 input/
 nextflow
 miniconda.sh
-miniconda.sh
+docker/cellranger-10.0.0.tar.xz

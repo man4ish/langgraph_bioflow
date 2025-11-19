@@ -35,6 +35,9 @@ The goal is to evolve into a **smart pipeline supervisor** capable of:
 
 ## Architecture
 
+![Multi-omics Architecture Diagram](https://raw.githubusercontent.com/man4ish/langgraph_bioflow/main/multi-omics_architecture_diagram.png)
+
+
 ```
 
 Raw Reads
@@ -52,6 +55,7 @@ FASTQC → QC Decision (LangGraph)
 └── FAIL → Re-run QC (max 3 attempts)
 
 ```
+
 
 Each stage is represented as a **LangGraph node**, which calls either a Nextflow workflow or a Python module.
 

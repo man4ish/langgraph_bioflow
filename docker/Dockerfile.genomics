@@ -60,14 +60,14 @@ RUN wget https://github.com/pcingola/SnpEff/archive/refs/tags/v5.1d.zip \
 # Install TrimGalore
 # -----------------------------
     RUN apt-get update && apt-get install -y --no-install-recommends \
-    perl \
-    python3-pip \
+    perl wget python3-pip \
     && pip3 install --no-cache-dir cutadapt \
     && wget https://github.com/FelixKrueger/TrimGalore/archive/refs/tags/0.6.10.tar.gz \
     && tar -xzf 0.6.10.tar.gz \
     && mv TrimGalore-0.6.10 /usr/local/TrimGalore \
     && ln -s /usr/local/TrimGalore/trim_galore /usr/local/bin/trim_galore \
     && rm 0.6.10.tar.gz
+
 
 # Test tools
 RUN bwa 2>&1 | head -n 1 \
