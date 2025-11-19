@@ -43,12 +43,6 @@ RUN R -e "if (!requireNamespace('BiocManager', quietly=TRUE)) install.packages('
         && rm /tmp/cellranger-10.0.0.tar.xz    
 
 # -----------------------------
-# Copy pathway enrichment script
-# -----------------------------
-COPY pathway_analysis.R /opt/scripts/pathway_analysis.R
-RUN chmod +x /opt/scripts/pathway_analysis.R
-
-# -----------------------------
 # Set working directory for user data
 # -----------------------------
 WORKDIR /data
