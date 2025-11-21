@@ -1,7 +1,7 @@
 # Dockerfile
 FROM ubuntu:22.04
 
-LABEL maintainer="Your Name"
+LABEL maintainer="Manish Kumar"
 LABEL description="BWA + Samtools + Picard + GATK + SnpEff (ARM64 & AMD64)"
 
 # Set working directory for builds

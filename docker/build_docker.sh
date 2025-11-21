@@ -19,8 +19,8 @@ echo "Genomics Docker image built: ${GENOMICS_IMAGE}"
 # -----------------------------
 # Build Cell Ranger scRNA-seq image
 # -----------------------------
-CELLRANGER_DOCKERFILE="Dockerfile.cellranger_scRNAseq"
-CELLRANGER_IMAGE="man4ish/cellranger-scrnaseq:latest"
+CELLRANGER_DOCKERFILE="Dockerfile.scrnaseq"
+CELLRANGER_IMAGE="man4ish/scrnaseq:latest"
 
 echo "Building Cell Ranger scRNA-seq Docker image..."
 docker build -f ${CELLRANGER_DOCKERFILE} -t ${CELLRANGER_IMAGE} .
@@ -48,6 +48,7 @@ docker build \
     -f ${RNASEQ_DOCKERFILE} \
     -t ${RNASEQ_IMAGE} .
 
+
 # -----------------------------
 # Push RNA-seq image if build succeeded
 # -----------------------------
@@ -55,3 +56,18 @@ echo "Docker image built successfully: ${RNASEQ_IMAGE}"
 echo "Pushing image to Docker Hub..."
 docker push ${RNASEQ_IMAGE}
 echo "Docker image pushed successfully."
+
+# -----------------------------
+# Build LC-MS proteomics pipeline image
+# -----------------------------
+LCMS_DOCKERFILE="Dockerfile.lcms"
+LCMS_IMAGE="man4ish/lcms:latest"
+
+echo "Building LC-MS proteomics Docker image..."
+docker build -f ${LCMS_DOCKERFILE} -t ${LCMS_IMAGE} .
+echo "LC-MS proteomics Docker image built: ${LCMS_IMAGE}"
+
+# Optionally push LC-MS image
+echo "Pushing LC-MS image to Docker Hub..."
+docker push ${LCMS_IMAGE}
+echo "LC-MS proteomics Docker image pushed successfully."
