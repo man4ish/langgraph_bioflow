@@ -71,6 +71,8 @@ project_root/
 │   ├── exome_pipeline.nf
 │   ├── wgs_pipeline.nf
 │   ├── rnaseq_pipeline.nf
+│   ├── lcms_pipeline.nf
+│   ├── scrnaseq_pipeline.nf
 │   └── __init__.py
 │
 ├── src/                            
