@@ -1,6 +1,67 @@
-# ============================================
-# Single-cell RNA-seq analysis + pathway enrichment
-# ============================================
+#'
+#' Single-cell RNA-seq Analysis and Pathway Enrichment Pipeline
+#'
+#' This script performs an end-to-end analysis of single-cell RNA-seq (scRNA-seq)
+#' data processed with CellRanger. It builds a Seurat object, performs quality
+#' control, normalization, dimensionality reduction, clustering, marker gene
+#' identification, and functional enrichment analysis.
+#'
+#' Workflow Summary:
+#'
+#' 1. **Data Loading**
+#'    - Reads filtered CellRanger matrices (`filtered_feature_bc_matrix`).
+#'    - Creates a Seurat object for downstream analysis.
+#'
+#' 2. **Quality Control**
+#'    - Computes mitochondrial percentage per cell.
+#'    - Generates QC violin plots (nFeature_RNA, nCount_RNA, percent.mt).
+#'    - Filters low-quality cells based on feature count and mitochondrial content.
+#'
+#' 3. **Normalization & Feature Selection**
+#'    - Log-normalization of counts.
+#'    - Identification of highly variable genes (HVGs).
+#'    - Scaling of variable genes for PCA.
+#'
+#' 4. **Dimensionality Reduction**
+#'    - Runs PCA on HVGs.
+#'    - Saves PCA plot.
+#'    - Computes UMAP embeddings for visualization.
+#'
+#' 5. **Clustering**
+#'    - Constructs nearest-neighbor graph.
+#'    - Performs clustering at user-specified resolution.
+#'    - Saves UMAP plot with cluster labels.
+#'
+#' 6. **Cluster Marker Identification**
+#'    - Identifies marker genes for each cluster using differential expression.
+#'    - Saves full marker list and heatmap of top markers per cluster.
+#'
+#' 7. **Differential Expression Example**
+#'    - Includes example contrast (cluster 1 vs cluster 2).
+#'
+#' 8. **Pathway Enrichment Analysis**
+#'    - Converts gene symbols to Entrez IDs.
+#'    - Runs:
+#'        - GO Biological Process enrichment.
+#'        - KEGG pathway enrichment.
+#'    - Saves enrichment results and barplots of top enriched pathways.
+#'
+#' Outputs:
+#' - QC plots, PCA plot, UMAP plot
+#' - Marker lists, top-marker heatmap
+#' - Differential expression results
+#' - GO and KEGG enrichment tables and barplots
+#' - Final Seurat object (`seurat_obj.rds`)
+#'
+#' Dependencies:
+#' - Seurat, ggplot2, dplyr, patchwork
+#' - clusterProfiler, org.Hs.eg.db, enrichplot
+#'
+#' This script serves as a template for scRNA-seq exploratory analysis and
+#' downstream pathway interpretation using standard Seurat and clusterProfiler
+#' workflows.
+#'
+
 
 # Load required libraries
 library(Seurat)

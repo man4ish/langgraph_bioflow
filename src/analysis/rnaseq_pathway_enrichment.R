@@ -1,7 +1,52 @@
-# rnaseq_pathway_enrichment.R
-# Author: Manish
-# Date: 2025-11-18
-# Description: Take Kallisto gene expression matrix and perform pathway enrichment analysis using clusterProfiler and GSEA
+#' -----------------------------------------------------------------------------
+#' Module: RNA-seq Pathway Enrichment Analysis
+#'
+#' Author: Manish
+#' Date: 2025-11-18
+#'
+#' Description:
+#'   This script performs pathway enrichment analysis from a Kallisto-generated
+#'   gene expression matrix. It supports both Gene Set Enrichment Analysis (GSEA)
+#'   and Over-Representation Analysis (ORA) using the clusterProfiler package.
+#'   The script generates tabular results and visualizations of top enriched pathways.
+#'
+#' Workflow:
+#'   1. Load gene expression matrix (TSV format) with gene symbols as row identifiers.
+#'   2. Preprocess expression data (e.g., compute mean expression across samples).
+#'   3. Map gene symbols to Entrez IDs for compatibility with enrichment functions.
+#'   4. GSEA:
+#'        - Uses ranked gene list sorted by mean expression.
+#'        - Performs enrichment for GO Biological Process (BP).
+#'        - Saves results as "GSEA_results.tsv".
+#'   5. ORA:
+#'        - Selects top highly expressed genes (default top 100).
+#'        - Performs GO BP enrichment.
+#'        - Saves results as "ORA_results.tsv".
+#'   6. Visualization:
+#'        - Dotplots of top enriched pathways for GSEA and ORA.
+#'        - Saves plots in "Enrichment_Plots.pdf".
+#'
+#' Input:
+#'   - Command-line argument: path to gene expression TSV file.
+#'
+#' Output:
+#'   - GSEA_results.tsv       : Tabular results from GSEA
+#'   - ORA_results.tsv        : Tabular results from ORA
+#'   - Enrichment_Plots.pdf   : Dotplots of top pathways
+#'
+#' Dependencies:
+#'   - clusterProfiler
+#'   - org.Hs.eg.db
+#'   - DOSE
+#'   - enrichplot
+#'   - ggplot2
+#'   - dplyr
+#'   - readr
+#'
+#' Usage:
+#'   Rscript rnaseq_pathway_enrichment.R <gene_expression_matrix.tsv>
+#' -----------------------------------------------------------------------------
+
 
 # -----------------------------
 # Load libraries

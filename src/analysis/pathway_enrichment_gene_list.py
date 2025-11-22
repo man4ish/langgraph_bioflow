@@ -1,11 +1,50 @@
+
+#!/usr/bin/python
 """
-Module: Pathway Enrichment and Visualization from Gene List
+Module: Gene List Pathway Enrichment and Visualization
 
 Author: Manish Kumar
 Date: 2025-11-14
-Description: Performs pathway enrichment analysis from a gene list,
-             saves results as JSON, and visualizes top enriched pathways.
+
+Description:
+    This module provides a class-based workflow for performing pathway
+    enrichment analysis using a list of gene symbols. It leverages the
+    gseapy library (Enrichr API) to compute pathway over-representation,
+    saves results in JSON format, extracts genes from specific enriched
+    pathways, and generates customizable bar plots of the top enriched
+    pathways.
+
+Core Features:
+    • Run enrichment analysis using Reactome, KEGG, GO Biological Process,
+      or any Enrichr-supported gene set collection.
+    • Save enrichment output as a JSON file for reproducibility and
+      downstream processing.
+    • Retrieve top enriched pathways sorted by adjusted p-value.
+    • Visualize the most significant pathways using horizontal bar plots
+      (−log10 adjusted p-value).
+    • Extract gene members associated with any enriched pathway.
+
+Classes:
+    GeneListEnrichment:
+        Handles all enrichment operations, visualization, and export.
+
+Inputs:
+    • List of gene symbols (string identifiers)
+    • Optional organism (“Human” by default)
+    • User-specified pathway database (e.g., Reactome_2022, KEGG_2021, GO_Biological_Process_2021)
+
+Outputs:
+    • JSON file containing full enrichment results
+    • Optional PNG/PDF bar plot of top enriched pathways
+    • Programmatic access to enriched terms and pathway genes
+
+Example:
+    See __main__ section for demonstration with a test gene list.
+
+Dependencies:
+    pandas, matplotlib, seaborn, numpy, gseapy, json, os
 """
+
 
 import pandas as pd
 import matplotlib.pyplot as plt

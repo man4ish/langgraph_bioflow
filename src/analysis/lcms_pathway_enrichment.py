@@ -1,3 +1,38 @@
+#!/usr/bin/python
+"""
+Differential Expression Enrichment Analysis Module
+
+This module performs pathway enrichment analysis on differential expression
+results using Over-Representation Analysis (ORA) and Gene Set Enrichment
+Analysis (GSEA) via the GSEApy library.
+
+Workflow Summary:
+1. Load differential expression results from a tab-separated file containing
+   gene identifiers, log fold-changes, and FDR values.
+
+2. ORA (Over-Representation Analysis):
+   - Select significantly regulated genes based on FDR and logFC thresholds.
+   - Run enrichment using Reactome (or optionally KEGG, GO terms, etc.).
+   - Save enrichment tables and visualizations to the specified output folder.
+
+3. GSEA (Gene Set Enrichment Analysis):
+   - Create a ranked list of all genes based on logFC values.
+   - Run preranked GSEA using Reactome or other gene-set libraries.
+   - Save enrichment scores, normalized enrichment scores, and plots.
+
+Outputs:
+- ORA results are saved in `output/ora`
+- Ranked gene list is saved as `output/ranked_genes.rnk`
+- GSEA results are saved in `output/gsea`
+
+Dependencies:
+- pandas
+- gseapy
+
+This script serves as a template for pathway enrichment on differential
+expression data from transcriptomics or proteomics experiments.
+"""
+
 import pandas as pd
 import gseapy as gp
 

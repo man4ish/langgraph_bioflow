@@ -1,10 +1,43 @@
+#!/usr/bin/python
 """
 Module: Gene → Pathway Network Visualization
 
 Author: Manish Kumar
 Date: 2025-11-15
-Description: Builds a structured gene → pathway network from pathway 
-             enrichment JSON results, visualizes it, and generates RAG queries.
+
+Description:
+    This module builds a structured gene-to-pathway network from pathway
+    enrichment results stored in a JSON file. It provides functionality to:
+
+    - Construct a directed network graph with genes and pathways as nodes.
+    - Visualize the network with distinct colors for genes and pathways.
+    - Generate structured queries suitable for downstream Retrieval-Augmented
+      Generation (RAG) pipelines.
+
+Classes / Functions:
+    build_gene_pathway_network(json_file)
+        Builds a NetworkX directed graph from enrichment JSON results.
+    
+    plot_gene_pathway_network(G, save_path)
+        Plots the gene-to-pathway network and saves the figure.
+    
+    generate_rag_queries_from_json(json_file)
+        Generates structured text queries from enrichment JSON for RAG.
+
+Inputs:
+    - json_file: Path to enrichment results in JSON format, typically generated
+      by gene set enrichment analysis (e.g., via gseapy).
+
+Outputs:
+    - NetworkX DiGraph object (genes → pathways)
+    - PNG figure of the network
+    - List of RAG queries, e.g., "Genes: gene1, gene2, ... in pathway pathway_name"
+
+Dependencies:
+    - json
+    - networkx
+    - matplotlib
+    - os
 """
 
 import json
