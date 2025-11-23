@@ -7,6 +7,16 @@ set -e  # Exit immediately if a command exits with a non-zero status
 set -o pipefail  # Fail if any command in a pipeline fails
 
 # -----------------------------
+# Build BWA tool image
+# -----------------------------
+GENOMICS_DOCKERFILE="Dockerfile.bwa-arm64"
+GENOMICS_IMAGE="man4ish/bwa-arm64-native:latest"
+
+echo "Building BWA Docker image..."
+docker build -t bwa-arm64-native -f Dockerfile.bwa-arm64 .
+echo "BWA Docker image built: ${GENOMICS_IMAGE}"
+
+# -----------------------------
 # Build general genomics pipeline image
 # -----------------------------
 GENOMICS_DOCKERFILE="Dockerfile.genomics"
