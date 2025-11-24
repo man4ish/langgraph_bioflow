@@ -1,31 +1,39 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-params.input_fastq = 'data/fastq/*.gz'
-params.reference = 'data/reference/assembly38.fasta'
-params.bed = 'data/reference/Twist_ILMN_Exome_2.0_Plus_Panel.hg38.bed'
-params.dbsnp = 'data/reference/Homo_sapiens_assembly38.dbsnp138.vcf'
+params.reference = "data/reference/assembly38.fasta"
 
+Channel.fromFilePairs("data/fastq/*_{R1,R2}_001.fastq.gz", size: 2)
+       .set { fastq_pairs }
 
 process bwa_align {
     tag { sample_id }
-    container 'biocontainers/bwa:v0.7.17-3-deb_cv1'
+    container 'man4ish/bwa-arm64-native:latest'
     cpus 8
+    memory '32 GB'
+    publishDir 'results/aligned_sam', mode: 'copy', overwrite: true
 
     input:
     tuple val(sample_id), path(reads)
 
     output:
-    path "out/aligned_bam/${sample_id}.bam"
+    path "${sample_id}.sam"
 
     script:
     """
-    bwa mem -t ${task.cpus} ${params.reference} ${reads[0]} ${reads[1]} | samtools view -b -o out/aligned_bam/${sample_id}.bam
+    echo "=== Reference and index files in container ==="
+    ls -la assembly38.fasta*
+    
+    echo "=== Starting BWA MEM for $sample_id ==="
+    bwa mem -t ${task.cpus} -R '@RG\\tID:${sample_id}\\tSM:${sample_id}\\tPL:ILLUMINA' \
+        assembly38.fasta ${reads[0]} ${reads[1]} > ${sample_id}.sam
+    
+    echo "=== DONE === SAM file size and lines:"
+    ls -lh ${sample_id}.sam
+    grep -v "^@" ${sample_id}.sam | wc -l | awk '{print \$1 " alignment lines"}'
     """
 }
 
 workflow {
-    aligned_bams = bwa_align(fastq_pairs)
+    fastq_pairs | bwa_align
 }
-
-

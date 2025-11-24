@@ -17,3 +17,8 @@ input/
 nextflow
 miniconda.sh
 docker/cellranger-10.0.0.tar.xz
+workflows/test_pipeline.nf
+clean.sh
+bak_nextflow.config
+workflows/hello.nf
+old_nextflow.config
