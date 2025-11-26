@@ -4,6 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import requests
 from time import sleep
+from PIL import Image
 
 # ----------------------------
 # Config
@@ -26,21 +27,55 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+# ----------------------------
+# Functional Header Bar + Soft Background Styling
+# ----------------------------
+
+# Add soft pastel background to header row
+st.markdown("""
+<div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;  /* vertical align center */
+    padding:2px 0px;
+">
+    <div style='font-size:26px; font-weight:bold; color:#2E4053;'>
+        Workflow Orchestration Dashboard
+    </div>
+    <div style='width:250px;'>
+        <input type="text" placeholder="Search..."
+               style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;" />
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
 
 # ----------------------------
 # Sidebar
 # ----------------------------
-st.sidebar.title("LangGraph BioFlow")
+# Load your logo
+logo = Image.open("../assets/Langgraph_bioflow.png")
+st.sidebar.image(logo, width=150)
+
+# Sidebar title and description
+st.sidebar.markdown("## LangGraph BioFlow")
+st.sidebar.markdown("AI-Orchestrated Bioinformatics Workflow Supervisor")
+st.sidebar.markdown("---")
+
+# Workflow stage selection
 workflow_stage = st.sidebar.radio(
     "Start from stage:",
     ["Pipeline Choice", "Pathway Enrichment", "RAG", "GNN"]
 )
-st.sidebar.markdown("---")
+
+# Pipeline options
 st.sidebar.header("Pipeline Options")
 pipeline_choice = st.sidebar.selectbox(
     "Choose pipeline (WGS / Exome / RNA-Seq):",
     ["WGS", "Exome", "RNA-Seq"]
 )
+
+# Run workflow button
 st.sidebar.button("Run Workflow")
 
 # ----------------------------
@@ -49,12 +84,29 @@ st.sidebar.button("Run Workflow")
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
     ["Workflow Status", "Pathway Enrichment", "RAG Network", "GNN Predictions", "Logs"]
 )
+tab_height = 50  # fixed height in px, adjust as needed
 
 # ----------------------------
 # Tab 1: Workflow Status
 # ----------------------------
 with tab1:
-    st.header("Workflow Progress")
+    st.markdown(f"<div style='height:{tab_height}px; overflow-y:auto; padding-right:10px;'>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="
+        background-color:#C8E6C9;  
+        padding:5px 10px; 
+        border-radius:5px; 
+        display:inline-block;
+        font-size:18px;
+        font-weight:bold;
+        color:#2E4053;
+        margin-bottom:5px;">
+        Workflow Progress
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("Monitor the pipeline execution and QC progress")
     status_placeholder = st.empty()
     progress_bar = st.progress(0)
 
@@ -73,11 +125,29 @@ with tab1:
         except Exception as e:
             st.error(f"Error fetching workflow status: {e}")
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
 # ----------------------------
 # Tab 2: Pathway Enrichment
 # ----------------------------
 with tab2:
-    st.header("Pathway Enrichment Results")
+    st.markdown(f"<div style='height:{tab_height}px; overflow-y:auto; padding-right:10px;'>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="
+        background-color:#A3CFE5; 
+        padding:5px 10px; 
+        border-radius:5px; 
+        display:inline-block;
+        font-size:18px;
+        font-weight:bold;
+        color:#2E4053;
+        margin-bottom:5px;">
+        Pathway Enrichment Results
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("Explore enriched pathways for your gene sets")
     if DEMO_MODE:
         enrichment_data = pd.DataFrame({
             "Gene": ["TP53", "APP", "SNCA", "LRRK2"],
@@ -101,11 +171,29 @@ with tab2:
                        data=enrichment_data.to_json(orient="records"),
                        file_name="enrichment_results.json")
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
 # ----------------------------
 # Tab 3: RAG Network
 # ----------------------------
 with tab3:
-    st.header("RAG Knowledge Graph")
+    st.markdown(f"<div style='height:{tab_height}px; overflow-y:auto; padding-right:10px;'>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="
+        background-color:#FFE0B2;  
+        padding:5px 10px; 
+        border-radius:5px; 
+        display:inline-block;
+        font-size:18px;
+        font-weight:bold;
+        color:#2E4053;
+        margin-bottom:5px;">
+        RAG Knowledge Graph
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("Visualize gene-pathway-drug relationships using the RAG network")
     G = nx.Graph()
     if DEMO_MODE:
         G.add_edges_from([("Gene1", "PathwayA"), ("Gene2", "PathwayB"), ("Gene3", "PathwayC")])
@@ -121,11 +209,29 @@ with tab3:
     nx.draw(G, with_labels=True, node_color='lightgreen', node_size=1400, font_size=12, ax=ax)
     st.pyplot(fig)
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
 # ----------------------------
 # Tab 4: GNN Predictions
 # ----------------------------
 with tab4:
-    st.header("GNN Drug Predictions")
+    st.markdown(f"<div style='height:{tab_height}px; overflow-y:auto; padding-right:10px;'>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="
+        background-color:#D1C4E9;  
+        padding:5px 10px; 
+        border-radius:5px; 
+        display:inline-block;
+        font-size:18px;
+        font-weight:bold;
+        color:#2E4053;
+        margin-bottom:5px;">
+        GNN Drug Predictions
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("View predicted drugs and their scores from the GNN model")
     if DEMO_MODE:
         predictions = pd.DataFrame({
             "Drug": ["DrugA", "DrugB", "DrugC"],
@@ -148,11 +254,29 @@ with tab4:
                        data=predictions.to_json(orient="records"),
                        file_name="gnn_predictions.json")
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
 # ----------------------------
 # Tab 5: Logs
 # ----------------------------
 with tab5:
-    st.header("Workflow Logs")
+    st.markdown(f"<div style='height:{tab_height}px; overflow-y:auto; padding-right:10px;'>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="
+        background-color:#CFD8DC;  
+        padding:5px 10px; 
+        border-radius:5px; 
+        display:inline-block;
+        font-size:18px;
+        font-weight:bold;
+        color:#2E4053;
+        margin-bottom:5px;">
+        Workflow Logs
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("View detailed logs of the workflow execution and status")
     if DEMO_MODE:
         log_text = """
         [2025-11-23 10:00] QC started
@@ -171,3 +295,20 @@ with tab5:
             st.error(f"Error fetching logs: {e}")
             log_text = ""
     st.text_area("Live Logs", value=log_text, height=200)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+st.markdown("---")  # Horizontal separator
+
+st.markdown("""
+<div style="
+    min-height:40vh;  /* minimum height for content */
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;">
+    <div style="text-align:center; color:#555555; font-size:12px;">
+        Developed by Manish Kumar | © 2025
+    </div>
+</div>
+""", unsafe_allow_html=True)
